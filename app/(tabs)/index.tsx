@@ -156,7 +156,7 @@ export default function TabOneScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#6b2714",
     padding: 16,
   },
   title: {
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     marginVertical: 16,
-    color: "#000",
+    color: "#ffffff",
   },
   error: {
     color: "red",
