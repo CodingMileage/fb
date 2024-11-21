@@ -1,12 +1,4 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-} from "react-native";
-import React from "react";
+import { View, Text, SafeAreaView, StyleSheet, TextInput } from "react-native";
 import { useEffect, useState } from "react";
 import { db, auth } from "@/FirebaseConfig";
 import {
@@ -22,8 +14,6 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { useRouter } from "expo-router";
-import { Picker } from "@react-native-picker/picker";
-import Slider from "@react-native-community/slider";
 
 const attributes = {
   closeShot: "Close Shot",
@@ -65,7 +55,7 @@ const inchesToFeetAndInches = (inches: number) => {
   return { feet, remainingInches };
 };
 
-const newbuild = () => {
+const newBuild = () => {
   const [newUserGamerTag, setNewUserGamerTag] = useState("");
   const [newBuildHeight, setNewBuildHeight] = useState(69); // Default to 5'9" in inches
   const [newBuildWeight, setNewBuildWeight] = useState(150);
@@ -129,13 +119,6 @@ const newbuild = () => {
     return options;
   };
 
-  const handleSliderChange = (key) => (value) => {
-    setAttributesState((prev) => ({
-      ...prev,
-      [key]: Math.round(value),
-    }));
-  };
-
   const isFormValid = () => {
     return (
       newBuildHeight > 0 &&
@@ -193,9 +176,9 @@ const newbuild = () => {
     fetchUserData();
   }, []);
 
-  //   const handleSliderChange = (attribute) => (event, newValue) => {
-  //     setAttributesState((prev) => ({ ...prev, [attribute]: newValue }));
-  //   };
+  const handleSliderChange = (attribute) => (event, newValue) => {
+    setAttributesState((prev) => ({ ...prev, [attribute]: newValue }));
+  };
 
   const handleInputChange = (attribute) => (event) => {
     const value = event.target.value === "" ? 25 : Number(event.target.value);
@@ -312,188 +295,34 @@ const newbuild = () => {
   const { feet, remainingInches } = inchesToFeetAndInches(newBuildHeight);
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Build Details Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Build Details</Text>
-
-        {/* Position Picker */}
-        <Text style={styles.label}>Build Position</Text>
-        <Picker
-          selectedValue={newBuildPosition}
-          onValueChange={(itemValue) => {
-            setNewBuildPosition(itemValue);
-            // Set default height and wingspan
-            setNewBuildHeight(heightOptions(itemValue)[0]);
-            setNewBuildWingspan(heightOptions(itemValue)[0]);
-          }}
-        >
-          <Picker.Item label="PG" value="PG" />
-          <Picker.Item label="SG" value="SG" />
-          <Picker.Item label="SF" value="SF" />
-          <Picker.Item label="PF" value="PF" />
-          <Picker.Item label="C" value="C" />
-        </Picker>
-
-        {/* Build Role Picker */}
-        <Text style={styles.label}>Build Role</Text>
-        <Picker
-          selectedValue={newBuildRole}
-          onValueChange={(itemValue) => setNewBuildRole(itemValue)}
-          enabled={!!newBuildPosition}
-        >
-          {/* Dynamically populate roles based on position */}
-          <Picker.Item label="Slasher" value="Slasher" />
-          <Picker.Item label="Shooter" value="Shooter" />
-          {/* Add more roles as needed */}
-        </Picker>
-
-        {/* Height Picker */}
-        <Text style={styles.label}>Build Height</Text>
-        <Picker
-          selectedValue={newBuildHeight}
-          onValueChange={(itemValue) => setNewBuildHeight(Number(itemValue))}
-        >
-          {heightOptions(newBuildPosition).map((heightInches) => {
-            const { feet, remainingInches } =
-              inchesToFeetAndInches(heightInches);
-            return (
-              <Picker.Item
-                key={heightInches}
-                label={`${feet}'${remainingInches}"`}
-                value={heightInches}
-              />
-            );
-          })}
-        </Picker>
-
-        {/* Weight Input */}
-        <Text style={styles.label}>Build Weight</Text>
-        <TextInput
-          style={styles.input}
-          value={newBuildWeight.toString()}
-          onChangeText={(text) => setNewBuildWeight(Number(text))}
-          keyboardType="numeric"
-        />
-      </View>
-
-      {/* Attributes Sections */}
-      {[
-        { title: "Finishing", color: "#1e40af", attributes: finishingAtt },
-        { title: "Shooting", color: "#15803d", attributes: shootingAtt },
-        { title: "Playmaking", color: "#ca8a04", attributes: playmakingAtt },
-        { title: "Defense", color: "#dc2626", attributes: defAtt },
-        { title: "Physical", color: "#ca8a04", attributes: physicalAtt },
-      ].map(({ title, color, attributes }) => (
-        <View key={title} style={[styles.card, { backgroundColor: color }]}>
-          <Text style={styles.cardTitle}>{title} Attributes</Text>
-          {attributes.map(([key, label]) => (
-            <View key={key} style={styles.attributeRow}>
-              <Text style={styles.attributeLabel}>{label}</Text>
-              <Slider
-                value={attributesState[key]}
-                minimumValue={25}
-                maximumValue={99}
-                step={1}
-                onValueChange={handleSliderChange(key)}
-                minimumTrackTintColor="#FFFFFF"
-                maximumTrackTintColor="#000000"
-              />
-              <TextInput
-                style={styles.attributeInput}
-                value={attributesState[key].toString()}
-                onChangeText={(text) => {
-                  const value = Math.min(99, Math.max(25, Number(text) || 25));
-                  setAttributesState((prev) => ({ ...prev, [key]: value }));
-                }}
-                keyboardType="numeric"
-              />
-            </View>
-          ))}
-        </View>
-      ))}
-
-      {/* Submit Button */}
-      <TouchableOpacity
-        style={[styles.submitButton, { opacity: isFormValid() ? 1 : 0.5 }]}
-        onPress={onSubmitBuild}
-        disabled={!isFormValid()}
-      >
-        <Text style={styles.submitButtonText}>Submit Build</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.text}>Hi {gamertag}</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Gamertag"
+        onChange={(e) => setNewUserGamerTag(e.target.value)}
+        value={newUserGamerTag}
+      ></TextInput>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: "#6b2714",
-  },
-  card: {
-    backgroundColor: "white",
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 10,
-    color: "black",
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: "black",
+    flexDirection: "column",
+    backgroundColor: "brown",
   },
   input: {
+    height: 40,
+    margin: 12,
     borderWidth: 1,
-    borderColor: "#ddd",
     padding: 10,
-    borderRadius: 4,
-    marginBottom: 10,
-  },
-  attributeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  attributeLabel: {
-    flex: 1,
-    color: "white",
-    fontWeight: "bold",
-  },
-  attributeInput: {
-    width: 50,
-    textAlign: "center",
-    borderWidth: 1,
-    borderColor: "white",
     color: "white",
   },
-  submitButton: {
-    backgroundColor: "#3b82f6",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  submitButtonText: {
+  text: {
     color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  signInText: {
-    textAlign: "center",
-    fontSize: 16,
-    marginTop: 20,
   },
 });
 
-export default newbuild;
+export default newBuild;
