@@ -1,10 +1,12 @@
+import { StatusBar } from "expo-status-bar";
+import EditScreenInfo from "@/components/EditScreenInfo";
 import {
-  View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Platform,
 } from "react-native";
+import { Text, View } from "@/components/Themed";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "@/FirebaseConfig";
@@ -14,23 +16,55 @@ import {
 } from "firebase/auth";
 import { router } from "expo-router";
 
-const index = () => {
+export default function ModalScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const signIn = async () => {
+    try {
+      const user = await signInWithEmailAndPassword(auth, email, password);
+      if (user) router.replace("/(tabs)");
+    } catch (error: any) {
+      console.log(error);
+      alert("Sign in failed: " + error.message);
+    }
+  };
+
+  const signUp = async () => {
+    try {
+      const user = await createUserWithEmailAndPassword(auth, email, password);
+      if (user) router.replace("/(tabs)");
+    } catch (error: any) {
+      console.log(error);
+      alert("Sign in failed: " + error.message);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>2KConnect</Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => {
-          router.replace("/(tabs)");
-        }}
-      >
-        <Text style={styles.text}>Get Started</Text>
+      <Text style={styles.title}>Login</Text>
+      <TextInput
+        style={styles.textInput}
+        placeholder="email"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={styles.textInput}
+        placeholder="password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      <TouchableOpacity style={styles.button} onPress={signIn}>
+        <Text style={styles.text}>Login</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={signUp}>
+        <Text style={styles.text}>Make Account</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
-};
-
-export default index;
+}
 
 const styles = StyleSheet.create({
   container: {

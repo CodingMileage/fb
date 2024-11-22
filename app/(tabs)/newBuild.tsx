@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, StyleSheet, TextInput } from "react-native";
+import { View, SafeAreaView, StyleSheet, TextInput } from "react-native";
 import { useEffect, useState } from "react";
 import { db, auth } from "@/FirebaseConfig";
 import {
@@ -13,7 +13,10 @@ import {
   getDoc,
   setDoc,
 } from "firebase/firestore";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
+import { ScrollView } from "react-native";
+import { Provider as PaperProvider, Provider } from "react-native-paper";
+import { Text, Menu, Button, Divider } from "react-native-paper";
 
 const attributes = {
   closeShot: "Close Shot",
@@ -63,12 +66,15 @@ const newBuild = () => {
   const [newBuildRole, setNewBuildRole] = useState("");
   const [newBuildWingspan, setNewBuildWingspan] = useState(69);
   const [newBuildLikes, setNewBuildLikes] = useState(0);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [attributesState, setAttributesState] = useState(
     Object.keys(attributes).reduce((acc, attr) => {
       acc[attr] = 25;
       return acc;
     }, {})
   );
+
+  const navigation = useNavigation();
 
   interface AttributesState {
     closeShot: number;
@@ -100,6 +106,13 @@ const newBuild = () => {
     SF: ["2BH", "Lock", "Backend"],
     PF: ["Backend", "Inside", "Outside"],
     C: ["Inside C", "Outside C"],
+  };
+
+  const handlePositionChange = (position) => {
+    setNewBuildPosition(position);
+    setNewBuildHeight(heightRanges[position]?.min || 69); // Default height
+    setNewBuildWingspan(heightRanges[position]?.min || 69); // Default wingspan
+    setMenuVisible(false); // Close the menu
   };
 
   const heightRanges = {
@@ -295,15 +308,55 @@ const newBuild = () => {
   const { feet, remainingInches } = inchesToFeetAndInches(newBuildHeight);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.text}>Hi {gamertag}</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Gamertag"
-        onChange={(e) => setNewUserGamerTag(e.target.value)}
-        value={newUserGamerTag}
-      ></TextInput>
-    </SafeAreaView>
+    <Provider>
+      <View style={styles.container}>
+        <Text style={styles.label}>Build Position</Text>
+        <Menu
+          visible={menuVisible}
+          onDismiss={() => setMenuVisible(false)}
+          anchor={
+            <Button
+              mode="outlined"
+              onPress={() => setMenuVisible(true)}
+              style={styles.dropdown}
+              labelStyle={styles.dropdownText}
+            >
+              {newBuildPosition}
+            </Button>
+          }
+        >
+          <Menu.Item
+            onPress={() => handlePositionChange("PG")}
+            title="PG"
+            titleStyle={styles.menuItemText}
+          />
+          <Divider />
+          <Menu.Item
+            onPress={() => handlePositionChange("SG")}
+            title="SG"
+            titleStyle={styles.menuItemText}
+          />
+          <Divider />
+          <Menu.Item
+            onPress={() => handlePositionChange("SF")}
+            title="SF"
+            titleStyle={styles.menuItemText}
+          />
+          <Divider />
+          <Menu.Item
+            onPress={() => handlePositionChange("PF")}
+            title="PF"
+            titleStyle={styles.menuItemText}
+          />
+          <Divider />
+          <Menu.Item
+            onPress={() => handlePositionChange("C")}
+            title="C"
+            titleStyle={styles.menuItemText}
+          />
+        </Menu>
+      </View>
+    </Provider>
   );
 };
 
@@ -311,7 +364,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: "column",
-    backgroundColor: "brown",
+    backgroundColor: "#6b2714",
   },
   input: {
     height: 40,
@@ -322,6 +375,28 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "white",
+    flex: 1,
+    textAlign: "center",
+    paddingTop: 12,
+  },
+  label: {
+    color: "white",
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  dropdown: {
+    borderColor: "white",
+    borderWidth: 1,
+    borderRadius: 8,
+    backgroundColor: "#6b2714",
+  },
+  dropdownText: {
+    color: "white",
+    fontSize: 16,
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: "black",
   },
 });
 

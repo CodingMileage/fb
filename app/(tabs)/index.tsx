@@ -8,12 +8,12 @@ import {
   Dimensions,
   Animated,
   ActivityIndicator,
+  Platform,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "@/FirebaseConfig";
-import { Link } from "expo-router";
+import { Link, useNavigation, useRouter } from "expo-router";
 
 type Build = {
   id: string;
@@ -34,7 +34,7 @@ export const convertHeight = (inches: number) => {
 };
 
 export default function TabOneScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
   const [mostPopularBuilds, setMostPopularBuilds] = useState<Build[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,14 +82,48 @@ export default function TabOneScreen() {
       }).start();
     };
 
+    const handlePress = () => {
+      router.push(`/build/${item.id}`);
+    };
+
     return (
       <View style={styles.cardContainer}>
-        <Link href={`/build/${item.id}`}>
+        {Platform.OS === "web" ? (
+          <Link href={`/build/${item.id}`} asChild>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+            >
+              <Animated.View
+                style={[
+                  styles.card,
+                  { width: cardWidth, transform: [{ scale: scaleAnim }] },
+                ]}
+              >
+                {/* Card content */}
+                <Text style={styles.buildText}>Position: {item.position}</Text>
+                <Text style={styles.buildText}>
+                  Height: {convertHeight(item.height)}
+                </Text>
+                <Text style={styles.buildText}>Weight: {item.weight}</Text>
+                <Text style={styles.buildText}>
+                  Wingspan: {convertHeight(item.wingspan)}
+                </Text>
+                <Text style={styles.buildText}>Role: {item.role}</Text>
+                <View style={styles.likeContainer}>
+                  <Icon name="heart" size={24} color="red" />
+                  <Text style={styles.likesText}>{item.likes}</Text>
+                </View>
+              </Animated.View>
+            </TouchableOpacity>
+          </Link>
+        ) : (
           <TouchableOpacity
             activeOpacity={0.8}
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
-            // onPress={() => navigation.navigate("BuildDetails", { id: item.id })}
+            onPress={handlePress}
           >
             <Animated.View
               style={[
@@ -97,6 +131,7 @@ export default function TabOneScreen() {
                 { width: cardWidth, transform: [{ scale: scaleAnim }] },
               ]}
             >
+              {/* Card content */}
               <Text style={styles.buildText}>Position: {item.position}</Text>
               <Text style={styles.buildText}>
                 Height: {convertHeight(item.height)}
@@ -112,7 +147,7 @@ export default function TabOneScreen() {
               </View>
             </Animated.View>
           </TouchableOpacity>
-        </Link>
+        )}
       </View>
     );
   };
