@@ -11,7 +11,7 @@ import {
   Platform,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { db } from "@/FirebaseConfig";
 import { Link, useNavigation, useRouter } from "expo-router";
 
@@ -36,6 +36,7 @@ export const convertHeight = (inches: number) => {
 export default function TabOneScreen() {
   const router = useRouter();
   const [mostPopularBuilds, setMostPopularBuilds] = useState<Build[]>([]);
+  const [newestBuilds, setNewestBuilds] = useState([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const screenWidth = Dimensions.get("window").width;
@@ -61,8 +62,29 @@ export default function TabOneScreen() {
     }
   };
 
+  const getNewestBuilds = async () => {
+    try {
+      const buildsCollectionRef = collection(db, "builds");
+
+      const newestBuildsQuery = query(
+        buildsCollectionRef,
+        orderBy("timestamp", "desc"),
+        limit(5)
+      );
+      const data = await getDocs(newestBuildsQuery);
+      const filteredData = data.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+      setNewestBuilds(filteredData);
+    } catch (error) {
+      console.error("Error fetching newest builds: ", error);
+    }
+  };
+
   useEffect(() => {
     fetchMostLikedBuilds();
+    getNewestBuilds();
   }, []);
 
   const BuildCard = ({ item }: { item: Build }) => {
@@ -169,22 +191,40 @@ export default function TabOneScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Most Liked Builds</Text>
-      {mostPopularBuilds.length > 0 ? (
-        <FlatList
-          data={mostPopularBuilds}
-          renderItem={({ item }) => <BuildCard item={item} />}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-        />
-      ) : (
-        <Text style={styles.noBuildsText}>No builds found.</Text>
-      )}
-    </View>
+    <>
+      <View style={styles.container}>
+        <Text style={styles.title}>Most Liked Builds</Text>
+        {mostPopularBuilds.length > 0 ? (
+          <FlatList
+            data={mostPopularBuilds}
+            renderItem={({ item }) => <BuildCard item={item} />}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+          />
+        ) : (
+          <Text style={styles.noBuildsText}>No builds found.</Text>
+        )}
+      </View>
+      <View style={styles.container}>
+        <Text style={styles.title}>Most Liked Builds</Text>
+        {newestBuilds.length > 0 ? (
+          <FlatList
+            data={newestBuilds}
+            renderItem={({ item }) => <BuildCard item={item} />}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+          />
+        ) : (
+          <Text style={styles.noBuildsText}>No builds found.</Text>
+        )}
+      </View>
+    </>
   );
 }
 
