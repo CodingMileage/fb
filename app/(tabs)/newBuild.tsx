@@ -17,6 +17,7 @@ import {
   arrayUnion,
   collection,
   updateDoc,
+  getDoc,
 } from "firebase/firestore";
 import { useNavigation } from "@react-navigation/native";
 
@@ -64,7 +65,7 @@ const positionsToRoles = {
 
 const heightRanges = {
   PG: { min: 69, max: 79 }, // 5'9" - 6'7"
-  SG: { min: 76, max: 81 }, // 6'4" - 6'9"
+  SG: { min: 76, max: 80 }, // 6'4" - 6'8"
   SF: { min: 77, max: 83 }, // 6'5" - 6'11"
   PF: { min: 78, max: 84 }, // 6'6" - 7'0"
   C: { min: 79, max: 87 }, // 6'7" - 7'3"
@@ -74,18 +75,66 @@ const heightRanges = {
 const inchesToFeetAndInches = (inches: number) => {
   const feet = Math.floor(inches / 12);
   const remainingInches = inches % 12;
-  return `${feet}'${remainingInches}"`;
+  return {
+    feet,
+    remainingInches,
+  };
 };
 
 const NewBuildScreen = () => {
   const navigation = useNavigation();
   const [newUserGamerTag, setNewUserGamerTag] = useState("");
+  const [userHasGamertag, setUserHasGamertag] = useState(false);
+  const [gamertag, setGamertag] = useState<string | null>(null);
   const [newBuildHeight, setNewBuildHeight] = useState(69);
   const [newBuildWeight, setNewBuildWeight] = useState(150);
   const [newBuildPosition, setNewBuildPosition] = useState("");
   const [newBuildRole, setNewBuildRole] = useState("");
   const [newBuildWingspan, setNewBuildWingspan] = useState(69);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!auth.currentUser) {
+        setError("User not authenticated.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const userDocRef = doc(db, "users", auth.currentUser.uid);
+        const userDocSnapshot = await getDoc(userDocRef);
+
+        if (userDocSnapshot.exists()) {
+          const userData = userDocSnapshot.data();
+          const userGamertag = userData?.gamertag;
+
+          if (!userGamertag) {
+            // Check if gamertag is empty
+            // alert("Please input a gamertag.");
+            setError("Gamertag is required.");
+            setGamertag(""); // Reset the gamertag state
+          } else {
+            console.log("Fetched Gamertag:", userGamertag); // Debugging
+            setGamertag(userGamertag);
+            setNewUserGamerTag(userGamertag);
+            setUserHasGamertag(true);
+          }
+        } else {
+          console.log("No document found for user"); // Debugging
+          setGamertag("");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setError("Failed to load user data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const [attributesState, setAttributesState] = useState(
     Object.keys(attributes).reduce((acc, attr) => {
@@ -159,7 +208,7 @@ const NewBuildScreen = () => {
       });
 
       // Reset form and navigate
-      navigation.navigate("Community");
+      navigation.navigate("index");
       setError(null);
     } catch (error) {
       console.error("Error adding build: ", error);
@@ -195,17 +244,39 @@ const NewBuildScreen = () => {
     ));
   };
 
+  const renderAttributePickers = (attributes, backgroundColor) => {
+    return attributes.map(([key, label]) => (
+      <View key={key} style={[styles.pickerContainer, { backgroundColor }]}>
+        <Text style={styles.label}>{label}</Text>
+        <Picker
+          selectedValue={attributesState[key]}
+          onValueChange={(value) => handleAttributeChange(key, value)}
+          style={styles.picker}
+        >
+          {[...Array(75).keys()].map((i) => {
+            const value = i + 25; // Range: 25-99
+            return (
+              <Picker.Item key={value} label={value.toString()} value={value} />
+            );
+          })}
+        </Picker>
+      </View>
+    ));
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.title}>Build Details</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Gamertag"
-          value={newUserGamerTag}
-          onChangeText={setNewUserGamerTag}
-        />
+        {!userHasGamertag && (
+          <TextInput
+            style={styles.input}
+            placeholder="Gamertag"
+            value={newUserGamerTag}
+            onChangeText={setNewUserGamerTag}
+          />
+        )}
 
         <View style={styles.pickerContainer}>
           <Text style={styles.label}>Build Position</Text>
@@ -216,6 +287,8 @@ const NewBuildScreen = () => {
               setNewBuildHeight(heightRanges[itemValue]?.min || 69);
               setNewBuildWingspan(heightRanges[itemValue]?.min || 69);
             }}
+            style={styles.picker} // Custom styles for the Picker
+            itemStyle={styles.pickerItem} // Custom styles for Picker items
           >
             <Picker.Item label="Select Position" value="" />
             {Object.keys(heightRanges).map((position) => (
@@ -244,13 +317,40 @@ const NewBuildScreen = () => {
             selectedValue={newBuildHeight}
             onValueChange={(itemValue) => setNewBuildHeight(itemValue)}
           >
-            {heightOptions(newBuildPosition).map((height) => (
-              <Picker.Item
-                key={height}
-                label={inchesToFeetAndInches(height)}
-                value={height}
-              />
-            ))}
+            {heightOptions(newBuildPosition).map((heightInches) => {
+              const { feet, remainingInches } =
+                inchesToFeetAndInches(heightInches);
+              return (
+                <Picker.Item
+                  key={heightInches}
+                  label={`${feet}'${remainingInches}`}
+                  value={heightInches}
+                ></Picker.Item>
+              );
+            })}
+          </Picker>
+        </View>
+
+        <View style={styles.pickerContainer}>
+          <Text style={styles.label}>Build Wingspan</Text>
+          <Picker
+            selectedValue={newBuildWingspan}
+            onValueChange={(itemValue) => setNewBuildWingspan(itemValue)}
+          >
+            {newBuildHeight > 0 &&
+              [...Array(8).keys()].map((i) => {
+                const wingspanInches = newBuildHeight + i;
+                const { feet, remainingInches } =
+                  inchesToFeetAndInches(wingspanInches);
+
+                return (
+                  <Picker.Item
+                    key={wingspanInches}
+                    label={`${feet}'${remainingInches}`}
+                    value={wingspanInches}
+                  />
+                );
+              })}
           </Picker>
         </View>
 
@@ -265,23 +365,23 @@ const NewBuildScreen = () => {
 
       {/* Attribute Categories */}
       <View style={[styles.card, { backgroundColor: "#2196F3" }]}>
-        {renderAttributeSliders(attributeCategories.finishing, "#2196F3")}
+        {renderAttributePickers(attributeCategories.finishing, "#2196F3")}
       </View>
 
       <View style={[styles.card, { backgroundColor: "#4CAF50" }]}>
-        {renderAttributeSliders(attributeCategories.shooting, "#4CAF50")}
+        {renderAttributePickers(attributeCategories.shooting, "#4CAF50")}
       </View>
 
       <View style={[styles.card, { backgroundColor: "#FFC107" }]}>
-        {renderAttributeSliders(attributeCategories.playmaking, "#FFC107")}
+        {renderAttributePickers(attributeCategories.playmaking, "#FFC107")}
       </View>
 
       <View style={[styles.card, { backgroundColor: "#F44336" }]}>
-        {renderAttributeSliders(attributeCategories.defense, "#F44336")}
+        {renderAttributePickers(attributeCategories.defense, "#F44336")}
       </View>
 
       <View style={[styles.card, { backgroundColor: "#FF9800" }]}>
-        {renderAttributeSliders(attributeCategories.physical, "#FF9800")}
+        {renderAttributePickers(attributeCategories.physical, "#FF9800")}
       </View>
 
       <TouchableOpacity
@@ -302,8 +402,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f4f4f4",
   },
+  text: { color: "green" },
   card: {
-    backgroundColor: "white",
+    backgroundColor: "#6b2714",
     borderRadius: 8,
     padding: 16,
     marginVertical: 8,

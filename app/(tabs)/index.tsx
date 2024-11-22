@@ -209,7 +209,7 @@ export default function TabOneScreen() {
         )}
       </View>
       <View style={styles.container}>
-        <Text style={styles.title}>Most Liked Builds</Text>
+        <Text style={styles.title}>Newest</Text>
         {newestBuilds.length > 0 ? (
           <FlatList
             data={newestBuilds}
