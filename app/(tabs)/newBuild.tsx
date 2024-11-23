@@ -100,6 +100,19 @@ const NewBuildScreen = () => {
     }, {})
   );
 
+  const getWingspanOptions = (heightInches: number) => {
+    const options = [];
+    for (let i = 0; i <= 8; i++) {
+      const wingspanInches = heightInches + i;
+      const { feet, remainingInches } = inchesToFeetAndInches(wingspanInches);
+      options.push({
+        label: `${feet}'${remainingInches}`,
+        value: wingspanInches,
+      });
+    }
+    return options;
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (!auth.currentUser) {
@@ -139,8 +152,17 @@ const NewBuildScreen = () => {
       }
     };
 
+    if (newBuildWingspan < newBuildHeight) {
+      setNewBuildWingspan(newBuildHeight);
+    }
+    // Keep the same relative difference if within valid range
+    const maxWingspan = newBuildHeight + 7;
+    if (newBuildWingspan > maxWingspan) {
+      setNewBuildWingspan(maxWingspan);
+    }
+
     fetchUserData();
-  }, []);
+  }, [newBuildHeight]);
 
   const handleAttributeChange = (attribute: string, value: number) => {
     setAttributesState((prev) => ({
@@ -315,7 +337,14 @@ const NewBuildScreen = () => {
           <Text style={styles.label}>Build Height</Text>
           <Picker
             selectedValue={newBuildHeight}
-            onValueChange={(itemValue) => setNewBuildHeight(itemValue)}
+            onValueChange={(itemValue) => {
+              const newHeight = parseInt(itemValue);
+              setNewBuildHeight(newHeight);
+              // Update wingspan when height changes to maintain valid range
+              if (newBuildWingspan < newHeight) {
+                setNewBuildWingspan(newHeight);
+              }
+            }}
           >
             {heightOptions(newBuildPosition).map((heightInches) => {
               const { feet, remainingInches } =
@@ -323,9 +352,9 @@ const NewBuildScreen = () => {
               return (
                 <Picker.Item
                   key={heightInches}
-                  label={`${feet}'${remainingInches}`}
+                  label={`${feet}'${remainingInches}"`}
                   value={heightInches}
-                ></Picker.Item>
+                />
               );
             })}
           </Picker>
@@ -335,22 +364,13 @@ const NewBuildScreen = () => {
           <Text style={styles.label}>Build Wingspan</Text>
           <Picker
             selectedValue={newBuildWingspan}
-            onValueChange={(itemValue) => setNewBuildWingspan(itemValue)}
+            onValueChange={(itemValue) =>
+              setNewBuildWingspan(parseInt(itemValue))
+            }
           >
-            {newBuildHeight > 0 &&
-              [...Array(8).keys()].map((i) => {
-                const wingspanInches = newBuildHeight + i;
-                const { feet, remainingInches } =
-                  inchesToFeetAndInches(wingspanInches);
-
-                return (
-                  <Picker.Item
-                    key={wingspanInches}
-                    label={`${feet}'${remainingInches}`}
-                    value={wingspanInches}
-                  />
-                );
-              })}
+            {getWingspanOptions(newBuildHeight).map(({ label, value }) => (
+              <Picker.Item key={value} label={label} value={value} />
+            ))}
           </Picker>
         </View>
 
