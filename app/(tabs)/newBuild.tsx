@@ -93,6 +93,12 @@ const NewBuildScreen = () => {
   const [newBuildWingspan, setNewBuildWingspan] = useState(69);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [attributesState, setAttributesState] = useState(
+    Object.keys(attributes).reduce((acc, attr) => {
+      acc[attr] = 25;
+      return acc;
+    }, {})
+  );
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -136,13 +142,6 @@ const NewBuildScreen = () => {
     fetchUserData();
   }, []);
 
-  const [attributesState, setAttributesState] = useState(
-    Object.keys(attributes).reduce((acc, attr) => {
-      acc[attr] = 25;
-      return acc;
-    }, {})
-  );
-
   const handleAttributeChange = (attribute: string, value: number) => {
     setAttributesState((prev) => ({
       ...prev,
@@ -152,10 +151,11 @@ const NewBuildScreen = () => {
 
   const heightOptions = (position: string) => {
     const range = heightRanges[position] || { min: 69, max: 79 };
-    return Array.from(
-      { length: range.max - range.min + 1 },
-      (_, i) => range.min + i
-    );
+    const options: number[] = [];
+    for (let i = range.min; i <= range.max; i++) {
+      options.push(i);
+    }
+    return options;
   };
 
   const isFormValid = () => {

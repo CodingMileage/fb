@@ -104,6 +104,15 @@ export default function TabTwoScreen() {
     setIsEditing(!isEditing); // Toggle editing mode
   };
 
+  const inchesToFeetAndInches = (inches: number) => {
+    const feet = Math.floor(inches / 12);
+    const remainingInches = inches % 12;
+    return {
+      feet,
+      remainingInches,
+    };
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Tab Two</Text>
@@ -112,7 +121,7 @@ export default function TabTwoScreen() {
         lightColor="#eee"
         darkColor="rgba(255,255,255,0.1)"
       />
-      <Text>{buildCount}</Text>
+      <Text>{JSON.stringify(inchesToFeetAndInches(70))}</Text>
     </View>
   );
 }

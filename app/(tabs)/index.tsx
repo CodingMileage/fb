@@ -9,6 +9,8 @@ import {
   Animated,
   ActivityIndicator,
   Platform,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
@@ -39,6 +41,7 @@ export default function TabOneScreen() {
   const [newestBuilds, setNewestBuilds] = useState([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const screenWidth = Dimensions.get("window").width;
   const cardWidth = screenWidth / 2 - 24;
 
@@ -80,6 +83,12 @@ export default function TabOneScreen() {
     } catch (error) {
       console.error("Error fetching newest builds: ", error);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchMostLikedBuilds(), getNewestBuilds()]);
+    setRefreshing(false);
   };
 
   useEffect(() => {
@@ -192,38 +201,60 @@ export default function TabOneScreen() {
 
   return (
     <>
-      <View style={styles.container}>
-        <Text style={styles.title}>Most Liked Builds</Text>
-        {mostPopularBuilds.length > 0 ? (
-          <FlatList
-            data={mostPopularBuilds}
-            renderItem={({ item }) => <BuildCard item={item} />}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            columnWrapperStyle={styles.row}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContent}
-          />
-        ) : (
-          <Text style={styles.noBuildsText}>No builds found.</Text>
-        )}
-      </View>
-      <View style={styles.container}>
-        <Text style={styles.title}>Newest</Text>
-        {newestBuilds.length > 0 ? (
-          <FlatList
-            data={newestBuilds}
-            renderItem={({ item }) => <BuildCard item={item} />}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            columnWrapperStyle={styles.row}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContent}
-          />
-        ) : (
-          <Text style={styles.noBuildsText}>No builds found.</Text>
-        )}
-      </View>
+      <ScrollView
+        className="bg-amber-900"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View className="p-4">
+          <Text className="font-bold text-center text-3xl text-white pb-2">
+            Most Liked Builds
+          </Text>
+          {mostPopularBuilds.length > 0 ? (
+            <FlatList
+              data={mostPopularBuilds}
+              renderItem={({ item }) => (
+                <View className="mr-4">
+                  {/* Add margin between cards */}
+                  <BuildCard item={item} />
+                </View>
+              )}
+              keyExtractor={(item) => item.id}
+              // numColumns={2}
+              // columnWrapperStyle={styles.row}
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.listContent}
+              horizontal={true}
+            />
+          ) : (
+            <Text style={styles.noBuildsText}>No builds found.</Text>
+          )}
+
+          <Text className="font-bold text-center text-3xl text-white pb-2">
+            Newest
+          </Text>
+          {newestBuilds.length > 0 ? (
+            <FlatList
+              data={newestBuilds}
+              renderItem={({ item }) => (
+                <View className="mr-4">
+                  {/* Add margin between cards */}
+                  <BuildCard item={item} />
+                </View>
+              )}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.listContent}
+              horizontal={true}
+            />
+          ) : (
+            <Text style={styles.noBuildsText}>No builds found.</Text>
+          )}
+        </View>
+      </ScrollView>
     </>
   );
 }

@@ -56,7 +56,7 @@ const BuildDetails = () => {
         builds: arrayRemove(id),
       });
 
-      navigation.navigate("Community");
+      navigation.goBack();
     } catch (error) {
       console.error("Error deleting build: ", error);
       setError("Failed to delete the build.");
