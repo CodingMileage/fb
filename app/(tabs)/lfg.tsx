@@ -21,6 +21,7 @@ import {
   getCountFromServer,
 } from "firebase/firestore";
 import { db, auth } from "@/FirebaseConfig";
+import { Link } from "expo-router";
 
 const LFG = () => {
   const [newPostTitle, setNewPostTitle] = useState("");
@@ -82,7 +83,7 @@ const LFG = () => {
       const newestPostsQuery = query(
         postCollectionRef,
         orderBy("timestamp", "desc"),
-        limit(5)
+        limit(10)
       );
       const data = await getDocs(newestPostsQuery);
       const filteredData = data.docs.map((doc) => ({
@@ -106,9 +107,9 @@ const LFG = () => {
       const userDocRef = doc(db, "users", userId);
 
       const newPostDocRef = await addDoc(collection(db, "posts"), {
-        title: newPostTitle,
+        // title: newPostTitle,
         content: newPostContent,
-        userId: userId,
+        userId,
         gamertag,
         timestamp: new Date(),
       });
@@ -117,7 +118,7 @@ const LFG = () => {
         posts: arrayUnion(newPostDocRef.id),
       });
 
-      setNewPostTitle("");
+      // setNewPostTitle("");
       setNewPostContent("");
       await getNewestPost(); // Refresh newest posts
       await fetchPostCount(); // Refresh post count
@@ -134,7 +135,7 @@ const LFG = () => {
           People Looking: {postCount}
         </Text>
         <View>
-          <TextInput
+          {/* <TextInput
             placeholder="Enter Title"
             value={newPostTitle}
             onChangeText={setNewPostTitle}
@@ -144,7 +145,7 @@ const LFG = () => {
               margin: 16,
               borderRadius: 8,
             }}
-          />
+          /> */}
           <TextInput
             placeholder="Enter Content"
             value={newPostContent}
@@ -170,19 +171,17 @@ const LFG = () => {
           </TouchableOpacity>
           <View>
             {newestPost.map((post) => (
-              <View
+              <Link
                 key={post.id}
-                style={{
-                  margin: 16,
-                  padding: 16,
-                  backgroundColor: "#f9f9f9",
-                  borderRadius: 8,
-                }}
+                href={`/post/${post.id}`}
+                className="p-4 m-4 rounded bg-slate-300"
               >
-                <Text style={{ fontWeight: "bold" }}>{post.title}</Text>
-                <Text>{post.content}</Text>
-                <Text style={{ fontStyle: "italic" }}>- {post.gamertag}</Text>
-              </View>
+                <View key={post.id}>
+                  {/* <Text style={{ fontWeight: "bold" }}>{post.title}</Text> */}
+                  <Text>{post.content}</Text>
+                  <Text style={{ fontStyle: "italic" }}>- {post.gamertag}</Text>
+                </View>
+              </Link>
             ))}
           </View>
         </View>

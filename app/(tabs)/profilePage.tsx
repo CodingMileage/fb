@@ -80,100 +80,97 @@ const ProfileScreen = () => {
   };
 
   useEffect(() => {
-    const setupListeners = async () => {
-      if (!auth.currentUser) {
-        setError("User not authenticated.");
-        setLoading(false);
-        return;
-      }
+    if (!auth.currentUser) {
+      setError("User not authenticated.");
+      setLoading(false);
+      return;
+    }
 
-      try {
-        setLoading(true);
+    setLoading(true);
 
-        // Set up real-time listener for user data
-        const userDocRef = doc(db, "users", auth.currentUser.uid);
-        const unsubscribeUser = onSnapshot(
-          userDocRef,
-          (snapshot) => {
-            if (snapshot.exists()) {
-              const userData = snapshot.data();
-              setGamertag(userData?.gamertag || "");
-            } else {
-              setGamertag("");
-            }
-          },
-          (error) => {
-            console.error("Error fetching user data:", error);
-            setError("Failed to load user data.");
+    const userDocRef = doc(db, "users", auth.currentUser.uid);
+    const buildsCollectionRef = collection(db, "builds");
+    const postsCollectionRef = collection(db, "posts");
+
+    // Initialize unsubscribe functions
+    let unsubscribeUser;
+    let unsubscribeBuilds;
+    let unsubscribePosts;
+
+    try {
+      // Set up real-time listener for user data
+      unsubscribeUser = onSnapshot(
+        userDocRef,
+        (snapshot) => {
+          if (snapshot.exists()) {
+            const userData = snapshot.data();
+            setGamertag(userData?.gamertag || "");
+          } else {
+            setGamertag("");
           }
-        );
+        },
+        (error) => {
+          console.error("Error fetching user data:", error);
+          setError("Failed to load user data.");
+        }
+      );
 
-        // Set up real-time listener for user builds
-        const buildsCollectionRef = collection(db, "builds");
-        const buildQuery = query(
-          buildsCollectionRef,
-          where("userId", "==", auth.currentUser.uid)
-        );
+      // Set up real-time listener for user builds
+      const buildQuery = query(
+        buildsCollectionRef,
+        where("userId", "==", auth.currentUser.uid)
+      );
 
-        const unsubscribeBuilds = onSnapshot(
-          buildQuery,
-          (querySnapshot) => {
-            const buildsData = querySnapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
+      unsubscribeBuilds = onSnapshot(
+        buildQuery,
+        (querySnapshot) => {
+          const buildsData = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
 
-            setUserBuilds(buildsData);
-            setBuildCount(querySnapshot.size);
-          },
-          (error) => {
-            console.error("Error fetching builds:", error);
-            setError("Failed to load user builds.");
-          }
-        );
+          setUserBuilds(buildsData);
+          setBuildCount(querySnapshot.size);
+        },
+        (error) => {
+          console.error("Error fetching builds:", error);
+          setError("Failed to load user builds.");
+        }
+      );
 
-        const postsCollectionRef = collection(db, "posts");
-        const postQuery = query(
-          postsCollectionRef,
-          where("userId", "==", auth.currentUser.uid)
-        );
+      // Set up real-time listener for user posts
+      const postQuery = query(
+        postsCollectionRef,
+        where("userId", "==", auth.currentUser.uid)
+      );
 
-        const unsubscribePosts = onSnapshot(
-          postQuery,
-          (querySnapshot) => {
-            const postsData = querySnapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
+      unsubscribePosts = onSnapshot(
+        postQuery,
+        (querySnapshot) => {
+          const postsData = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
 
-            setUserPost(postsData);
-            // setBuildCount(querySnapshot.size);
-          },
-          (error) => {
-            console.error("Error fetching posts:", error);
-            setError("Failed to load user posts.");
-          }
-        );
+          setUserPost(postsData);
+        },
+        (error) => {
+          console.error("Error fetching posts:", error);
+          setError("Failed to load user posts.");
+        }
+      );
+    } catch (error: any) {
+      console.error("Error setting up listeners:", error);
+      setError("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
 
-        // Return cleanup functions
-        return () => {
-          unsubscribeUser();
-          unsubscribeBuilds();
-          unsubscribePosts();
-        };
-      } catch (error: any) {
-        console.error("Error setting up listeners:", error);
-        setError("An unexpected error occurred.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const unsubscribe = setupListeners();
-
-    // Cleanup on unmount
+    // Cleanup function
     return () => {
-      if (unsubscribe) unsubscribe();
+      if (unsubscribeUser) unsubscribeUser();
+      if (unsubscribeBuilds) unsubscribeBuilds();
+      if (unsubscribePosts) unsubscribePosts();
     };
   }, [db]);
 
@@ -254,11 +251,20 @@ const ProfileScreen = () => {
               <Text style={styles.buildCountText}>
                 You have {buildCount} {buildCount === 1 ? "build" : "builds"}.
               </Text>
-              <Text>{userPost.map((user) => user.title)}</Text>
+
+              <Text className="flex flex-row p-4">Your Post</Text>
+              {userPost.map((user) => (
+                <View className="p-2 m-2 rounded bg-slate-200">
+                  <Text className="flex flex-row pr-4">
+                    Title: {user.title}
+                  </Text>
+                  <Text>Content: {user.content}</Text>
+                </View>
+              ))}
 
               <Text style={styles.sectionTitle}>Your Builds:</Text>
               {userBuilds.map((build) => (
-                <View key={build.id} className="bg-slate-200 p-2 m-2 rounded">
+                <View key={build.id} className="p-2 m-2 rounded bg-slate-200">
                   <Link key={build.id} href={`/build/${build.id}`}>
                     <View className="flex">
                       <Text className="font-bold">
