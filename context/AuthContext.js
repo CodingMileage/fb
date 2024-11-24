@@ -33,6 +33,8 @@ export const AuthProvider = ({ children }) => {
           email: user.email || "",
           likedBuilds: [],
           builds: [],
+          post: [],
+          likedPost: [],
           createdAt: new Date(),
         });
         console.log("New user document created.");

@@ -134,7 +134,7 @@ const BuildDetails = () => {
     buildData.drivingDunk +
     buildData.standingDunk +
     buildData.postControl -
-    175;
+    200;
 
   const shooting =
     buildData.midRange + buildData.threePointer + buildData.freeThrow - 65;

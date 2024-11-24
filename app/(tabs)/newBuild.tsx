@@ -20,6 +20,8 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { useNavigation } from "@react-navigation/native";
+import { useReload } from "../../context/ReloadContext";
+import { router } from "expo-router";
 
 const { width } = Dimensions.get("window");
 
@@ -65,9 +67,9 @@ const positionsToRoles = {
 
 const heightRanges = {
   PG: { min: 69, max: 79 }, // 5'9" - 6'7"
-  SG: { min: 76, max: 80 }, // 6'4" - 6'8"
-  SF: { min: 77, max: 83 }, // 6'5" - 6'11"
-  PF: { min: 78, max: 84 }, // 6'6" - 7'0"
+  SG: { min: 72, max: 80 }, // 6'4" - 6'8"
+  SF: { min: 76, max: 82 }, // 6'5" - 6'11"
+  PF: { min: 77, max: 84 }, // 6'6" - 7'0"
   C: { min: 79, max: 87 }, // 6'7" - 7'3"
 };
 
@@ -93,6 +95,7 @@ const NewBuildScreen = () => {
   const [newBuildWingspan, setNewBuildWingspan] = useState(69);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { reloadApp } = useReload();
   const [attributesState, setAttributesState] = useState(
     Object.keys(attributes).reduce((acc, attr) => {
       acc[attr] = 25;
@@ -130,18 +133,16 @@ const NewBuildScreen = () => {
           const userGamertag = userData?.gamertag;
 
           if (!userGamertag) {
-            // Check if gamertag is empty
-            // alert("Please input a gamertag.");
             setError("Gamertag is required.");
-            setGamertag(""); // Reset the gamertag state
+            setGamertag("");
           } else {
-            console.log("Fetched Gamertag:", userGamertag); // Debugging
+            console.log("Fetched Gamertag:", userGamertag);
             setGamertag(userGamertag);
             setNewUserGamerTag(userGamertag);
             setUserHasGamertag(true);
           }
         } else {
-          console.log("No document found for user"); // Debugging
+          console.log("No document found for user");
           setGamertag("");
         }
       } catch (error) {
@@ -152,17 +153,20 @@ const NewBuildScreen = () => {
       }
     };
 
+    fetchUserData();
+  }, []); // Only runs once when component mounts
+
+  // Separate useEffect for handling height and wingspan relationship
+  useEffect(() => {
     if (newBuildWingspan < newBuildHeight) {
       setNewBuildWingspan(newBuildHeight);
     }
-    // Keep the same relative difference if within valid range
-    const maxWingspan = newBuildHeight + 7;
+
+    const maxWingspan = newBuildHeight + 8;
     if (newBuildWingspan > maxWingspan) {
       setNewBuildWingspan(maxWingspan);
     }
-
-    fetchUserData();
-  }, [newBuildHeight]);
+  }, [newBuildHeight, newBuildWingspan]);
 
   const handleAttributeChange = (attribute: string, value: number) => {
     setAttributesState((prev) => ({
@@ -230,7 +234,19 @@ const NewBuildScreen = () => {
       });
 
       // Reset form and navigate
-      navigation.navigate("index");
+      setNewBuildHeight(69);
+      setNewBuildWeight(150);
+      setNewBuildWingspan(69);
+      setNewBuildPosition("");
+      setNewBuildRole("");
+      setAttributesState(
+        Object.keys(attributes).reduce((acc, attr) => {
+          acc[attr] = 25;
+          return acc;
+        }, {})
+      );
+      reloadApp(); // Trigger reload
+      router.replace("/(tabs)");
       setError(null);
     } catch (error) {
       console.error("Error adding build: ", error);
@@ -239,7 +255,7 @@ const NewBuildScreen = () => {
 
   const renderAttributeSliders = (category, color) => {
     return category.map(([key, label]) => (
-      <View key={key} style={styles.attributeContainer}>
+      <View key={key}>
         <Text style={styles.attributeLabel}>{label}</Text>
         <View style={styles.sliderContainer}>
           <Slider
@@ -352,7 +368,7 @@ const NewBuildScreen = () => {
               return (
                 <Picker.Item
                   key={heightInches}
-                  label={`${feet}'${remainingInches}"`}
+                  label={`${feet}'${remainingInches}`}
                   value={heightInches}
                 />
               );

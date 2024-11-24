@@ -18,13 +18,16 @@ import {
   query,
   where,
   getDocs,
+  onSnapshot,
+  getFirestore,
 } from "firebase/firestore";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
 } from "firebase/auth";
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
+import { useReload } from "@/context/ReloadContext";
 
 const convertHeight = (inches: number) => {
   const feet = Math.floor(inches / 12);
@@ -40,8 +43,11 @@ const ProfileScreen = () => {
   const [buildCount, setBuildCount] = useState<number>(0);
   const [userBuilds, setUserBuilds] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [userPost, setUserPost] = useState<any[]>([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { reloadKey } = useReload();
+  const db = getFirestore();
 
   const signIn = async () => {
     try {
@@ -74,7 +80,7 @@ const ProfileScreen = () => {
   };
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const setupListeners = async () => {
       if (!auth.currentUser) {
         setError("User not authenticated.");
         setLoading(false);
@@ -82,42 +88,94 @@ const ProfileScreen = () => {
       }
 
       try {
-        // Fetch user's gamertag
+        setLoading(true);
+
+        // Set up real-time listener for user data
         const userDocRef = doc(db, "users", auth.currentUser.uid);
-        const userDocSnapshot = await getDoc(userDocRef);
+        const unsubscribeUser = onSnapshot(
+          userDocRef,
+          (snapshot) => {
+            if (snapshot.exists()) {
+              const userData = snapshot.data();
+              setGamertag(userData?.gamertag || "");
+            } else {
+              setGamertag("");
+            }
+          },
+          (error) => {
+            console.error("Error fetching user data:", error);
+            setError("Failed to load user data.");
+          }
+        );
 
-        if (userDocSnapshot.exists()) {
-          const userData = userDocSnapshot.data();
-          setGamertag(userData?.gamertag || "");
-        } else {
-          setGamertag("");
-        }
-
-        // Fetch user's build count and builds
+        // Set up real-time listener for user builds
         const buildsCollectionRef = collection(db, "builds");
         const buildQuery = query(
           buildsCollectionRef,
           where("userId", "==", auth.currentUser.uid)
         );
-        const buildQuerySnapshot = await getDocs(buildQuery);
 
-        setBuildCount(buildQuerySnapshot.size);
+        const unsubscribeBuilds = onSnapshot(
+          buildQuery,
+          (querySnapshot) => {
+            const buildsData = querySnapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
 
-        const buildsData = buildQuerySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setUserBuilds(buildsData);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setError("Failed to load user data.");
+            setUserBuilds(buildsData);
+            setBuildCount(querySnapshot.size);
+          },
+          (error) => {
+            console.error("Error fetching builds:", error);
+            setError("Failed to load user builds.");
+          }
+        );
+
+        const postsCollectionRef = collection(db, "posts");
+        const postQuery = query(
+          postsCollectionRef,
+          where("userId", "==", auth.currentUser.uid)
+        );
+
+        const unsubscribePosts = onSnapshot(
+          postQuery,
+          (querySnapshot) => {
+            const postsData = querySnapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+
+            setUserPost(postsData);
+            // setBuildCount(querySnapshot.size);
+          },
+          (error) => {
+            console.error("Error fetching posts:", error);
+            setError("Failed to load user posts.");
+          }
+        );
+
+        // Return cleanup functions
+        return () => {
+          unsubscribeUser();
+          unsubscribeBuilds();
+          unsubscribePosts();
+        };
+      } catch (error: any) {
+        console.error("Error setting up listeners:", error);
+        setError("An unexpected error occurred.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserData();
-  }, []);
+    const unsubscribe = setupListeners();
+
+    // Cleanup on unmount
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [db]);
 
   const handleGamertagChange = (text: string) => {
     setNewGamertag(text);
@@ -196,18 +254,22 @@ const ProfileScreen = () => {
               <Text style={styles.buildCountText}>
                 You have {buildCount} {buildCount === 1 ? "build" : "builds"}.
               </Text>
+              <Text>{userPost.map((user) => user.title)}</Text>
 
               <Text style={styles.sectionTitle}>Your Builds:</Text>
               {userBuilds.map((build) => (
-                <View key={build.id} style={styles.buildItem}>
-                  <Text style={styles.buildPrimaryText}>
-                    Position: {build.position}
-                  </Text>
-                  <Text style={styles.buildSecondaryText}>
-                    Height: {convertHeight(build.height)} | Weight:{" "}
-                    {build.weight} | Wingspan: {convertHeight(build.wingspan)} |
-                    Role: {build.role}
-                  </Text>
+                <View key={build.id} className="bg-slate-200 p-2 m-2 rounded">
+                  <Link key={build.id} href={`/build/${build.id}`}>
+                    <View className="flex">
+                      <Text className="font-bold">
+                        Position: {build.position}
+                      </Text>
+                      <Text>Height: {convertHeight(build.height)}</Text>
+                      <Text>Weight: {build.weight}</Text>
+                      <Text>Wingspan: {convertHeight(build.wingspan)}</Text>
+                      <Text>Role: {build.role}</Text>
+                    </View>
+                  </Link>
                 </View>
               ))}
               <TouchableOpacity

@@ -56,9 +56,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="lfg"
         options={{
-          title: "Builds",
+          title: "Squad Finder",
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
