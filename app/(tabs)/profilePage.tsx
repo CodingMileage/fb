@@ -28,6 +28,7 @@ import {
 } from "firebase/auth";
 import { Link, router } from "expo-router";
 import { useReload } from "@/context/ReloadContext";
+import { useFocusEffect } from "@react-navigation/native";
 
 const convertHeight = (inches: number) => {
   const feet = Math.floor(inches / 12);
@@ -46,13 +47,14 @@ const ProfileScreen = () => {
   const [userPost, setUserPost] = useState<any[]>([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [user, setUser] = useState(null);
   const { reloadKey } = useReload();
   const db = getFirestore();
 
   const signIn = async () => {
     try {
       const user = await signInWithEmailAndPassword(auth, email, password);
-      if (user) router.replace("/(tabs)/profilePage");
+      setUser(user.user);
     } catch (error: any) {
       console.log(error);
       alert("Sign in failed: " + error.message);
@@ -72,7 +74,7 @@ const ProfileScreen = () => {
   const handleSignOut = async () => {
     try {
       await firebaseSignOut(auth);
-      router.replace("/(tabs)/profilePage"); // Navigate back to home screen
+      setUser(null);
     } catch (error: any) {
       console.log(error);
       alert("Sign out failed: " + error.message);
@@ -82,7 +84,6 @@ const ProfileScreen = () => {
   useEffect(() => {
     if (!auth.currentUser) {
       setError("User not authenticated.");
-      setLoading(false);
       return;
     }
 
@@ -172,7 +173,7 @@ const ProfileScreen = () => {
       if (unsubscribeBuilds) unsubscribeBuilds();
       if (unsubscribePosts) unsubscribePosts();
     };
-  }, [db]);
+  }, [db, user]);
 
   const handleGamertagChange = (text: string) => {
     setNewGamertag(text);
@@ -265,7 +266,7 @@ const ProfileScreen = () => {
               <Text style={styles.sectionTitle}>Your Builds:</Text>
               {userBuilds.map((build) => (
                 <View key={build.id} className="p-2 m-2 rounded bg-slate-200">
-                  <Link key={build.id} href={`/build/${build.id}`}>
+                  <Link href={`/build/${build.id}`}>
                     <View className="flex">
                       <Text className="font-bold">
                         Position: {build.position}

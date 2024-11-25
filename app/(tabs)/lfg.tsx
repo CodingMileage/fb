@@ -24,6 +24,8 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "@/FirebaseConfig";
 import { Link } from "expo-router";
+import { useAuth } from "@/context/AuthContext";
+import ProfileScreen from "./profilePage";
 
 const LFG = () => {
   const [newPostContent, setNewPostContent] = useState("");
@@ -33,6 +35,7 @@ const LFG = () => {
   const [postCount, setPostCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = ProfileScreen;
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -42,7 +45,7 @@ const LFG = () => {
     };
 
     fetchInitialData();
-  }, []);
+  }, [user]);
 
   const fetchPostCount = async () => {
     try {
