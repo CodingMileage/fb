@@ -29,6 +29,7 @@ import {
 import { Link, router } from "expo-router";
 import { useReload } from "@/context/ReloadContext";
 import { useFocusEffect } from "@react-navigation/native";
+import { useAuth } from "@/context/AuthContext";
 
 const convertHeight = (inches: number) => {
   const feet = Math.floor(inches / 12);
@@ -39,7 +40,7 @@ const convertHeight = (inches: number) => {
 const ProfileScreen = () => {
   const [gamertag, setGamertag] = useState<string | null>(null);
   const [newGamertag, setNewGamertag] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [buildCount, setBuildCount] = useState<number>(0);
   const [userBuilds, setUserBuilds] = useState<any[]>([]);
@@ -50,6 +51,7 @@ const ProfileScreen = () => {
   const [user, setUser] = useState(null);
   const { reloadKey } = useReload();
   const db = getFirestore();
+  const { handleSignIn, reloadTrigger } = useAuth();
 
   const signIn = async () => {
     try {
@@ -173,7 +175,7 @@ const ProfileScreen = () => {
       if (unsubscribeBuilds) unsubscribeBuilds();
       if (unsubscribePosts) unsubscribePosts();
     };
-  }, [db, user]);
+  }, [db, reloadTrigger]);
 
   const handleGamertagChange = (text: string) => {
     setNewGamertag(text);
@@ -253,7 +255,7 @@ const ProfileScreen = () => {
                 You have {buildCount} {buildCount === 1 ? "build" : "builds"}.
               </Text>
 
-              <Text className="flex flex-row p-4">Your Post</Text>
+              <Text className="flex p-4">Your Post</Text>
               {userPost.map((post) => (
                 <View className="p-2 m-2 rounded bg-slate-200">
                   <Link key={post.id} href={`/post/${post.id}`}>
@@ -308,7 +310,10 @@ const ProfileScreen = () => {
             onChangeText={setPassword}
             secureTextEntry
           />
-          <TouchableOpacity style={styles.button} onPress={signIn}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleSignIn(email, password)}
+          >
             <Text style={styles.text}>Login</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={signUp}>

@@ -6,6 +6,7 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import {
   collection,
@@ -35,7 +36,8 @@ const LFG = () => {
   const [postCount, setPostCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user } = ProfileScreen;
+  const { reloadTrigger } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -45,7 +47,13 @@ const LFG = () => {
     };
 
     fetchInitialData();
-  }, [user]);
+  }, [reloadTrigger]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchPostCount(), getNewestPost()]);
+    setRefreshing(false);
+  };
 
   const fetchPostCount = async () => {
     try {
@@ -170,7 +178,12 @@ const LFG = () => {
   };
 
   return (
-    <ScrollView style={{ backgroundColor: "#ffefcc" }}>
+    <ScrollView
+      style={{ backgroundColor: "#ffefcc" }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <SafeAreaView>
         <Text style={{ fontSize: 24, fontWeight: "bold", textAlign: "center" }}>
           People Looking: {postCount}
@@ -231,22 +244,49 @@ const LFG = () => {
             </View>
           )}
 
-          <View>
-            {newestPost.map((post) => (
-              <View
-                key={post.id}
-                style={{
-                  margin: 16,
-                  padding: 16,
-                  backgroundColor: "#e0e0e0",
-                  borderRadius: 8,
-                }}
-              >
-                <Text>{post.content}</Text>
-                <Text>{post.gamertag}</Text>
+          {newestPost.map((post) => {
+            // Calculate time difference in minutes
+            const now = new Date();
+            const postDate = post.timestamp.toDate();
+            const diffInMinutes = Math.floor((now - postDate) / (1000 * 60));
+
+            // Format the relative time string
+            let timeString;
+            if (diffInMinutes < 1) {
+              timeString = "just now";
+            } else if (diffInMinutes < 60) {
+              timeString = `${diffInMinutes} minute${
+                diffInMinutes === 1 ? "" : "s"
+              } ago`;
+            } else if (diffInMinutes < 1440) {
+              // less than 24 hours
+              const hours = Math.floor(diffInMinutes / 60);
+              timeString = `${hours} hour${hours === 1 ? "" : "s"} ago`;
+            } else {
+              const days = Math.floor(diffInMinutes / 1440);
+              timeString = `${days} day${days === 1 ? "" : "s"} ago`;
+            }
+
+            return (
+              <View key={post.id} className="p-4 m-4 rounded bg-slate-300">
+                <Link
+                  key={post.id}
+                  href={`/post/${post.id}`}
+                  className="flex flex-col"
+                >
+                  <View>
+                    <View className="flex flex-row justify-between">
+                      <Text>{post.content}</Text>
+                      <Text className="font-semibold">{timeString}</Text>
+                    </View>
+                    <Text className="italic font-semibold">
+                      - {post.gamertag}
+                    </Text>
+                  </View>
+                </Link>
               </View>
-            ))}
-          </View>
+            );
+          })}
         </View>
       </SafeAreaView>
     </ScrollView>

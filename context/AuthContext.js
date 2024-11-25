@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from "react";
 import { db, auth, googleProvider } from "@/FirebaseConfig";
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { signInWithPopup, signOut, onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const AuthContext = createContext();
@@ -8,6 +8,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
+  const [reloadTrigger, setReloadTrigger] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -54,9 +55,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const handleSignIn = async (email, password) => {
+    try {
+      const user = await signInWithEmailAndPassword(auth, email, password);
+      setReloadTrigger(prev => !prev);
+    } catch (error) {
+      console.log(error);
+      alert("Sign in failed: " + error.message);
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut(auth);
+      setReloadTrigger(prev => !prev);
       setError(null);
     } catch (err) {
       console.error(err);
@@ -65,7 +77,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, signInGoogle, handleSignOut, error }}>
+    <AuthContext.Provider value={{ user, signInGoogle, handleSignIn, handleSignOut, reloadTrigger, error }}>
       {children}
     </AuthContext.Provider>
   );
