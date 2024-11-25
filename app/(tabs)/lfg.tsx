@@ -19,15 +19,17 @@ import {
   getDoc,
   doc,
   getCountFromServer,
+  arrayRemove,
+  deleteDoc,
 } from "firebase/firestore";
 import { db, auth } from "@/FirebaseConfig";
 import { Link } from "expo-router";
 
 const LFG = () => {
-  const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
   const [gamertag, setGamertag] = useState<string | null>(null);
   const [newestPost, setNewestPost] = useState([]);
+  const [userPost, setUserPost] = useState(null);
   const [postCount, setPostCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,12 +87,25 @@ const LFG = () => {
         orderBy("timestamp", "desc"),
         limit(10)
       );
+
       const data = await getDocs(newestPostsQuery);
-      const filteredData = data.docs.map((doc) => ({
+
+      // Separate user's post from the rest
+      const currentUserId = auth.currentUser?.uid;
+      const allPosts = data.docs.map((doc) => ({
         ...doc.data(),
         id: doc.id,
       }));
-      setNewestPost(filteredData);
+
+      const userPostData = allPosts.find(
+        (post) => post.userId === currentUserId
+      );
+      const otherPosts = allPosts.filter(
+        (post) => post.userId !== currentUserId
+      );
+
+      setUserPost(userPostData || null);
+      setNewestPost(otherPosts);
     } catch (error) {
       console.error("Error fetching newest posts: ", error);
     }
@@ -107,7 +122,6 @@ const LFG = () => {
       const userDocRef = doc(db, "users", userId);
 
       const newPostDocRef = await addDoc(collection(db, "posts"), {
-        // title: newPostTitle,
         content: newPostContent,
         userId,
         gamertag,
@@ -118,13 +132,37 @@ const LFG = () => {
         posts: arrayUnion(newPostDocRef.id),
       });
 
-      // setNewPostTitle("");
       setNewPostContent("");
       await getNewestPost(); // Refresh newest posts
       await fetchPostCount(); // Refresh post count
     } catch (error) {
       console.error("Error submitting post:", error);
       setError("Failed to submit post.");
+    }
+  };
+
+  const onDeletePost = async (postId) => {
+    if (!auth.currentUser) {
+      console.error("User not authenticated");
+      return;
+    }
+
+    try {
+      const userId = auth.currentUser.uid;
+
+      const postDocRef = doc(db, "posts", postId);
+      const userDocRef = doc(db, "users", userId);
+
+      await deleteDoc(postDocRef);
+      await updateDoc(userDocRef, {
+        posts: arrayRemove(postId),
+      });
+
+      await getNewestPost();
+      await fetchPostCount();
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      setError("Failed to delete post.");
     }
   };
 
@@ -135,53 +173,75 @@ const LFG = () => {
           People Looking: {postCount}
         </Text>
         <View>
-          {/* <TextInput
-            placeholder="Enter Title"
-            value={newPostTitle}
-            onChangeText={setNewPostTitle}
-            style={{
-              backgroundColor: "#e0e0e0",
-              padding: 16,
-              margin: 16,
-              borderRadius: 8,
-            }}
-          /> */}
-          <TextInput
-            placeholder="Enter Content"
-            value={newPostContent}
-            onChangeText={setNewPostContent}
-            style={{
-              backgroundColor: "#e0e0e0",
-              padding: 16,
-              margin: 16,
-              borderRadius: 8,
-            }}
-          />
-          <TouchableOpacity onPress={onSubmitPost} style={{ margin: 16 }}>
-            <Text
-              style={{
-                backgroundColor: "#fff",
-                padding: 16,
-                textAlign: "center",
-                borderRadius: 8,
-              }}
-            >
-              Submit
-            </Text>
-          </TouchableOpacity>
+          {!userPost ? (
+            <>
+              <TextInput
+                placeholder="Enter Content"
+                value={newPostContent}
+                onChangeText={setNewPostContent}
+                style={{
+                  backgroundColor: "#e0e0e0",
+                  padding: 16,
+                  margin: 16,
+                  borderRadius: 8,
+                }}
+              />
+              <TouchableOpacity onPress={onSubmitPost} style={{ margin: 16 }}>
+                <Text
+                  style={{
+                    backgroundColor: "#fff",
+                    padding: 16,
+                    textAlign: "center",
+                    borderRadius: 8,
+                  }}
+                >
+                  Submit
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <View>
+              <Text className="text-3xl font-bold text-center">Your Post</Text>
+              <View
+                key={userPost.id}
+                style={{
+                  margin: 16,
+                  padding: 16,
+                  backgroundColor: "#f5f5f5",
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={{ marginBottom: 8 }}>{userPost.content}</Text>
+                <TouchableOpacity
+                  onPress={() => onDeletePost(userPost.id)}
+                  style={{
+                    backgroundColor: "#ff4d4d",
+                    padding: 8,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={{ color: "#fff", textAlign: "center" }}>
+                    Delete Post
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           <View>
             {newestPost.map((post) => (
-              <Link
+              <View
                 key={post.id}
-                href={`/post/${post.id}`}
-                className="p-4 m-4 rounded bg-slate-300"
+                style={{
+                  margin: 16,
+                  padding: 16,
+                  backgroundColor: "#e0e0e0",
+                  borderRadius: 8,
+                }}
               >
-                <View key={post.id}>
-                  {/* <Text style={{ fontWeight: "bold" }}>{post.title}</Text> */}
-                  <Text>{post.content}</Text>
-                  <Text style={{ fontStyle: "italic" }}>- {post.gamertag}</Text>
-                </View>
-              </Link>
+                <Text>{post.content}</Text>
+                <Text>{post.gamertag}</Text>
+              </View>
             ))}
           </View>
         </View>
