@@ -249,17 +249,21 @@ const ProfileScreen = () => {
                 <Text style={styles.buttonText}>Edit Gamertag</Text>
               </TouchableOpacity>
 
-              <Text style={styles.buildCountText}>
+              <Text>
                 You have {buildCount} {buildCount === 1 ? "build" : "builds"}.
               </Text>
 
               <Text className="flex flex-row p-4">Your Post</Text>
-              {userPost.map((user) => (
+              {userPost.map((post) => (
                 <View className="p-2 m-2 rounded bg-slate-200">
-                  <Text className="flex flex-row pr-4">
-                    Title: {user.title}
-                  </Text>
-                  <Text>Content: {user.content}</Text>
+                  <Link key={post.id} href={`/post/${post.id}`}>
+                    <View>
+                      <Text className="font-extrabold">
+                        Content:{" "}
+                        <Text className="font-semibold">{post.content}</Text>
+                      </Text>
+                    </View>
+                  </Link>
                 </View>
               ))}
 
