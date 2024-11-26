@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import {
   View,
-  Text,
   SafeAreaView,
   ScrollView,
   TextInput,
   TouchableOpacity,
   RefreshControl,
+  Text as TextN,
 } from "react-native";
 import {
   collection,
@@ -27,6 +27,8 @@ import {
 import { db, auth } from "@/FirebaseConfig";
 import { Link } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
+import { SegmentedButtons } from "react-native-paper";
+import { Avatar, Button, Card, Text } from "react-native-paper";
 
 const LFG = () => {
   const [newPostContent, setNewPostContent] = useState("");
@@ -38,13 +40,14 @@ const LFG = () => {
   const [loading, setLoading] = useState(true);
   const { reloadTrigger } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
-
+  const [mode, setMode] = React.useState("");
+  const LeftContent = (props) => <Avatar.Icon {...props} icon="folder" />;
   useEffect(() => {
     const fetchInitialData = async () => {
       await fetchUserData();
       await getNewestPost();
       await fetchPostCount();
-      await deleteOldPosts();
+      // await deleteOldPosts();
     };
 
     fetchInitialData();
@@ -52,7 +55,7 @@ const LFG = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchPostCount(), getNewestPost(), deleteOldPosts()]);
+    await Promise.all([fetchPostCount(), getNewestPost()]);
     setRefreshing(false);
   };
 
@@ -135,6 +138,7 @@ const LFG = () => {
 
       const newPostDocRef = await addDoc(collection(db, "posts"), {
         content: newPostContent,
+        mode,
         userId,
         gamertag,
         timestamp: new Date(),
@@ -228,12 +232,34 @@ const LFG = () => {
       }
     >
       <SafeAreaView>
-        <Text style={{ fontSize: 24, fontWeight: "bold", textAlign: "center" }}>
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: "bold",
+            textAlign: "center",
+            color: "black",
+          }}
+        >
           People Looking: {postCount}
         </Text>
         <View>
           {!userPost ? (
             <>
+              <SegmentedButtons
+                value={mode}
+                onValueChange={setMode}
+                buttons={[
+                  {
+                    value: "2s",
+                    label: "2s",
+                  },
+                  {
+                    value: "3s",
+                    label: "3s",
+                  },
+                  { value: "5s", label: "5s" },
+                ]}
+              />
               <TextInput
                 placeholder="Enter Content"
                 value={newPostContent}
@@ -245,6 +271,7 @@ const LFG = () => {
                   borderRadius: 8,
                 }}
               />
+
               <TouchableOpacity onPress={onSubmitPost} style={{ margin: 16 }}>
                 <Text
                   style={{
@@ -260,7 +287,9 @@ const LFG = () => {
             </>
           ) : (
             <View>
-              <Text className="text-3xl font-bold text-center">Your Post</Text>
+              <TextN className="text-3xl font-bold text-center">
+                Your Post
+              </TextN>
               <View
                 key={userPost.id}
                 style={{
@@ -270,7 +299,17 @@ const LFG = () => {
                   borderRadius: 8,
                 }}
               >
-                <Text style={{ marginBottom: 8 }}>{userPost.content}</Text>
+                <Text
+                  style={{
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    color: "black",
+                    paddingBottom: 12,
+                  }}
+                >
+                  {userPost.content}
+                </Text>
                 <TouchableOpacity
                   onPress={() => onDeletePost(userPost.id)}
                   style={{
@@ -311,21 +350,31 @@ const LFG = () => {
             }
 
             return (
-              <View key={post.id} className="p-4 m-4 rounded bg-slate-300">
+              <View key={post.id} className="p-4 m-4 rounded">
                 <Link
                   key={post.id}
                   href={`/post/${post.id}`}
                   className="flex flex-col"
                 >
-                  <View>
-                    <View className="flex flex-row justify-between">
-                      <Text>{post.content}</Text>
-                      <Text className="font-semibold">{timeString}</Text>
-                    </View>
-                    <Text className="italic font-semibold">
-                      - {post.gamertag}
-                    </Text>
-                  </View>
+                  <Card>
+                    <Card.Title
+                      title="Card Title"
+                      subtitle="Card Subtitle"
+                      left={LeftContent}
+                    />
+                    <Card.Content>
+                      <Text variant="titleLarge">{post.content}</Text>
+
+                      <Text variant="bodyMedium" className="italic">
+                        {post.gamertag}
+                      </Text>
+                      <Text>{timeString}</Text>
+                    </Card.Content>
+                    {/* <Card.Actions>
+                      <Button>Cancel</Button>
+                      <Button>Ok</Button>
+                    </Card.Actions> */}
+                  </Card>
                 </Link>
               </View>
             );

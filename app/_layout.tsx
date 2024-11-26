@@ -12,6 +12,7 @@ import "react-native-reanimated";
 import { AuthProvider } from "../context/AuthContext";
 import { useColorScheme } from "@/components/useColorScheme";
 import "../global.css";
+import { PaperProvider } from "react-native-paper";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -49,7 +50,9 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <PaperProvider>
+        <RootLayoutNav />
+      </PaperProvider>
     </AuthProvider>
   );
 }

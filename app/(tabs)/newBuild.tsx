@@ -22,6 +22,8 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { useReload } from "../../context/ReloadContext";
 import { router } from "expo-router";
+import { SegmentedButtons } from "react-native-paper";
+import { ProgressBar, MD3Colors } from "react-native-paper";
 
 const { width } = Dimensions.get("window");
 
@@ -283,29 +285,43 @@ const NewBuildScreen = () => {
   };
 
   const renderAttributePickers = (attributes, backgroundColor) => {
-    return attributes.map(([key, label]) => (
-      <View key={key} style={[styles.pickerContainer, { backgroundColor }]}>
-        <Text style={styles.label}>{label}</Text>
-        <Picker
-          selectedValue={attributesState[key]}
-          onValueChange={(value) => handleAttributeChange(key, value)}
-          style={styles.picker}
-        >
-          {[...Array(75).keys()].map((i) => {
-            const value = i + 25; // Range: 25-99
-            return (
-              <Picker.Item key={value} label={value.toString()} value={value} />
-            );
-          })}
-        </Picker>
-      </View>
-    ));
+    return attributes.map(([key, label]) => {
+      const selectedValue = attributesState[key] || 25; // Default to 25 if undefined
+      const progress = parseFloat(((selectedValue - 25) / 74).toFixed(2)); // Limit to 2 decimal places
+
+      return (
+        <View key={key} style={[styles.pickerContainer, { backgroundColor }]}>
+          <Text style={styles.label}>{label}</Text>
+          <Picker
+            selectedValue={selectedValue}
+            onValueChange={(value) => handleAttributeChange(key, value)}
+            style={styles.picker}
+          >
+            {[...Array(75).keys()].map((i) => {
+              const value = i + 25; // Range: 25-99
+              return (
+                <Picker.Item
+                  key={value}
+                  label={value.toString()}
+                  value={value}
+                />
+              );
+            })}
+          </Picker>
+          <ProgressBar
+            progress={progress}
+            color={MD3Colors.error50}
+            style={{ height: 40, borderRadius: 5 }} // Increase height and add rounded corners
+          />
+        </View>
+      );
+    });
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Build Details</Text>
+    <ScrollView className="bg-amber-900">
+      <View className="p-16">
+        {/* <Text className="text-3xl font-bold text-center">Build Details</Text> */}
 
         {!userHasGamertag && (
           <TextInput
@@ -316,9 +332,31 @@ const NewBuildScreen = () => {
           />
         )}
 
-        <View style={styles.pickerContainer}>
-          <Text style={styles.label}>Build Position</Text>
-          <Picker
+        <View>
+          <Text className="text-3xl font-bold text-center">Build Position</Text>
+          <SegmentedButtons
+            style={{ alignSelf: "center" }}
+            value={newBuildPosition}
+            onValueChange={(itemValue) => {
+              setNewBuildPosition(itemValue);
+              setNewBuildHeight(heightRanges[itemValue]?.min || 69);
+              setNewBuildWingspan(heightRanges[itemValue]?.min || 69);
+            }}
+            buttons={[
+              {
+                value: "PG",
+                label: "PG",
+              },
+              {
+                value: "SG",
+                label: "SG",
+              },
+              { value: "SF", label: "SF" },
+              { value: "PF", label: "PF" },
+              { value: "C", label: "C" },
+            ]}
+          />
+          {/* <Picker
             selectedValue={newBuildPosition}
             onValueChange={(itemValue) => {
               setNewBuildPosition(itemValue);
@@ -332,11 +370,11 @@ const NewBuildScreen = () => {
             {Object.keys(heightRanges).map((position) => (
               <Picker.Item key={position} label={position} value={position} />
             ))}
-          </Picker>
+          </Picker> */}
         </View>
 
-        <View style={styles.pickerContainer}>
-          <Text style={styles.label}>Build Role</Text>
+        <View>
+          <Text>Build Role</Text>
           <Picker
             selectedValue={newBuildRole}
             onValueChange={setNewBuildRole}
