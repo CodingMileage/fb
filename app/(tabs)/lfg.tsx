@@ -22,11 +22,11 @@ import {
   getCountFromServer,
   arrayRemove,
   deleteDoc,
+  where,
 } from "firebase/firestore";
 import { db, auth } from "@/FirebaseConfig";
 import { Link } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
-import ProfileScreen from "./profilePage";
 
 const LFG = () => {
   const [newPostContent, setNewPostContent] = useState("");
@@ -44,6 +44,7 @@ const LFG = () => {
       await fetchUserData();
       await getNewestPost();
       await fetchPostCount();
+      await deleteOldPosts();
     };
 
     fetchInitialData();
@@ -51,7 +52,7 @@ const LFG = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchPostCount(), getNewestPost()]);
+    await Promise.all([fetchPostCount(), getNewestPost(), deleteOldPosts()]);
     setRefreshing(false);
   };
 
@@ -149,6 +150,48 @@ const LFG = () => {
     } catch (error) {
       console.error("Error submitting post:", error);
       setError("Failed to submit post.");
+    }
+  };
+
+  const deleteOldPosts = async () => {
+    try {
+      // Calculate the timestamp for one hour ago
+      const oneHourAgo = new Date();
+      oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+
+      // Query for posts older than one hour
+      const postsRef = collection(db, "posts");
+      const oldPostsQuery = query(
+        postsRef,
+        where("timestamp", "<", oneHourAgo)
+      );
+
+      // Fetch the old posts
+      const oldPostsSnapshot = await getDocs(oldPostsQuery);
+
+      // Delete each old post
+      const deletePromises = oldPostsSnapshot.docs.map(async (postDoc) => {
+        const postId = postDoc.id;
+        const userId = postDoc.data().userId;
+
+        // Delete the post from the posts collection
+        await deleteDoc(doc(db, "posts", postId));
+
+        // Remove the post reference from the user's document
+        if (userId) {
+          const userDocRef = doc(db, "users", userId);
+          await updateDoc(userDocRef, {
+            posts: arrayRemove(postId),
+          });
+        }
+      });
+
+      // Wait for all deletions to complete
+      await Promise.all(deletePromises);
+
+      console.log(`Deleted ${oldPostsSnapshot.size} posts older than one hour`);
+    } catch (error) {
+      console.error("Error deleting old posts:", error);
     }
   };
 

@@ -257,8 +257,8 @@ const ProfileScreen = () => {
 
               <Text className="flex p-4">Your Post</Text>
               {userPost.map((post) => (
-                <View className="p-2 m-2 rounded bg-slate-200">
-                  <Link key={post.id} href={`/post/${post.id}`}>
+                <View key={post.id} className="p-2 m-2 rounded bg-slate-200">
+                  <Link href={`/post/${post.id}`}>
                     <View>
                       <Text className="font-extrabold">
                         Content:{" "}
