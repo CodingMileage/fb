@@ -290,8 +290,8 @@ const NewBuildScreen = () => {
       const progress = parseFloat(((selectedValue - 25) / 74).toFixed(2)); // Limit to 2 decimal places
 
       return (
-        <View key={key} style={[styles.pickerContainer, { backgroundColor }]}>
-          <Text style={styles.label}>{label}</Text>
+        <View key={key} style={[{ backgroundColor }]}>
+          <Text>{label}</Text>
           <Picker
             selectedValue={selectedValue}
             onValueChange={(value) => handleAttributeChange(key, value)}
@@ -438,7 +438,10 @@ const NewBuildScreen = () => {
       </View>
 
       {/* Attribute Categories */}
-      <View style={[styles.card, { backgroundColor: "#2196F3" }]}>
+      <View
+        style={[{ backgroundColor: "#2196F3" }]}
+        className="p-8 m-8 rounded"
+      >
         {renderAttributePickers(attributeCategories.finishing, "#2196F3")}
       </View>
 

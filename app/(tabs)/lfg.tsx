@@ -3,7 +3,7 @@ import {
   View,
   SafeAreaView,
   ScrollView,
-  TextInput,
+  TextInput as TextInputN,
   TouchableOpacity,
   RefreshControl,
   Text as TextN,
@@ -28,7 +28,7 @@ import { db, auth } from "@/FirebaseConfig";
 import { Link } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import { SegmentedButtons } from "react-native-paper";
-import { Avatar, Button, Card, Text } from "react-native-paper";
+import { Avatar, Button, Card, Text, TextInput } from "react-native-paper";
 
 const LFG = () => {
   const [newPostContent, setNewPostContent] = useState("");
@@ -226,7 +226,7 @@ const LFG = () => {
 
   return (
     <ScrollView
-      style={{ backgroundColor: "#ffefcc" }}
+      className="bg-amber-900"
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
@@ -245,45 +245,52 @@ const LFG = () => {
         <View>
           {!userPost ? (
             <>
-              <SegmentedButtons
-                value={mode}
-                onValueChange={setMode}
-                buttons={[
-                  {
-                    value: "2s",
-                    label: "2s",
-                  },
-                  {
-                    value: "3s",
-                    label: "3s",
-                  },
-                  { value: "5s", label: "5s" },
-                ]}
-              />
-              <TextInput
-                placeholder="Enter Content"
-                value={newPostContent}
-                onChangeText={setNewPostContent}
-                style={{
-                  backgroundColor: "#e0e0e0",
-                  padding: 16,
-                  margin: 16,
-                  borderRadius: 8,
-                }}
-              />
+              <View className="p-4 m-8">
+                <SegmentedButtons
+                  value={mode}
+                  onValueChange={setMode}
+                  buttons={[
+                    {
+                      value: "2s",
+                      label: "2s",
+                      showSelectedCheck: true,
+                    },
+                    {
+                      value: "3s",
+                      label: "3s",
+                      showSelectedCheck: true,
+                    },
 
-              <TouchableOpacity onPress={onSubmitPost} style={{ margin: 16 }}>
-                <Text
-                  style={{
-                    backgroundColor: "#fff",
-                    padding: 16,
-                    textAlign: "center",
-                    borderRadius: 8,
-                  }}
-                >
-                  Submit
-                </Text>
-              </TouchableOpacity>
+                    { value: "5s", label: "5s", showSelectedCheck: true },
+                  ]}
+                />
+                <TextInputN
+                  placeholder="Enter Content"
+                  value={newPostContent}
+                  onChangeText={setNewPostContent}
+                  placeholderTextColor={"black"}
+                  // style={{
+                  //   backgroundColor: "#e0e0e0",
+                  //   padding: 16,
+                  //   margin: 16,
+                  //   borderRadius: 8,
+                  // }}
+                  className="p-4 m-6 text-black bg-white rounded"
+                />
+
+                <TouchableOpacity onPress={onSubmitPost} style={{ margin: 16 }}>
+                  <TextN
+                    style={{
+                      backgroundColor: "#fff",
+                      padding: 16,
+                      textAlign: "center",
+                      borderRadius: 8,
+                    }}
+                  >
+                    Submit
+                  </TextN>
+                </TouchableOpacity>
+              </View>
             </>
           ) : (
             <View>

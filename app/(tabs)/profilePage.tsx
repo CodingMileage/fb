@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   SafeAreaView,
+  Button,
 } from "react-native";
 import { db, auth } from "@/FirebaseConfig";
 import {
@@ -30,6 +31,7 @@ import { Link, router } from "expo-router";
 import { useReload } from "@/context/ReloadContext";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "@/context/AuthContext";
+import Animated, { useSharedValue, withSpring } from "react-native-reanimated";
 
 const convertHeight = (inches: number) => {
   const feet = Math.floor(inches / 12);
@@ -321,6 +323,7 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </SafeAreaView>
       )}
+      <Link href={"/test"}>Test</Link>
     </ScrollView>
   );
 };

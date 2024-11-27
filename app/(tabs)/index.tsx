@@ -208,7 +208,7 @@ export default function TabOneScreen() {
         }
       >
         <View className="p-4">
-          <Text className="font-bold text-center text-3xl text-white pb-2">
+          <Text className="pb-2 text-3xl font-bold text-center text-white">
             Most Liked Builds
           </Text>
           {mostPopularBuilds.length > 0 ? (
@@ -232,7 +232,7 @@ export default function TabOneScreen() {
             <Text style={styles.noBuildsText}>No builds found.</Text>
           )}
 
-          <Text className="font-bold text-center text-3xl text-white pb-2">
+          <Text className="pb-2 text-3xl font-bold text-center text-white">
             Newest
           </Text>
           {newestBuilds.length > 0 ? (

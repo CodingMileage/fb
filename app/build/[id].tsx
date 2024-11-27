@@ -244,7 +244,7 @@ const BuildDetails = () => {
                 "Three Pointer": buildData.threePointer,
                 "Free Throw": buildData.freeThrow,
               }}
-              backgroundColor="#08fc00"
+              backgroundColor="#40a62b"
             />
 
             <AttributeCard
@@ -254,7 +254,7 @@ const BuildDetails = () => {
                 "Ball Handle": buildData.ballHandle,
                 "Speed with Ball": buildData.speedWithBall,
               }}
-              backgroundColor="#ebdf0c"
+              backgroundColor="#a6892b"
             />
 
             <AttributeCard
@@ -268,6 +268,17 @@ const BuildDetails = () => {
                 "Defensive Rebound": buildData.defensiveRebound,
               }}
               backgroundColor="#fc0019"
+            />
+
+            <AttributeCard
+              title="Physicals"
+              data={{
+                Speed: buildData.speed,
+                Agility: buildData.agility,
+                Strength: buildData.strength,
+                Vertical: buildData.vertical,
+              }}
+              backgroundColor="#bf9e32"
             />
           </View>
 
