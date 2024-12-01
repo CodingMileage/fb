@@ -59,22 +59,6 @@ const attributeCategories = {
   physical: Object.entries(attributes).slice(17, 21),
 };
 
-const positionsToRoles = {
-  PG: ["ISO Guard", "PNR Guard", "Lock"],
-  SG: ["ISO Guard", "2BH", "Lock"],
-  SF: ["2BH", "Lock", "Backend"],
-  PF: ["Backend", "Inside", "Outside"],
-  C: ["Inside C", "Outside C"],
-};
-
-const heightRanges = {
-  PG: { min: 69, max: 79 }, // 5'9" - 6'7"
-  SG: { min: 72, max: 80 }, // 6'4" - 6'8"
-  SF: { min: 76, max: 82 }, // 6'5" - 6'11"
-  PF: { min: 77, max: 84 }, // 6'6" - 7'0"
-  C: { min: 79, max: 87 }, // 6'7" - 7'3"
-};
-
 // Convert inches to feet and inches
 const inchesToFeetAndInches = (inches: number) => {
   const feet = Math.floor(inches / 12);
@@ -104,6 +88,22 @@ const NewBuildScreen = () => {
       return acc;
     }, {})
   );
+
+  const positionsToRoles = {
+    PG: ["ISO Guard", "PNR Guard", "Lock"],
+    SG: ["ISO Guard", "2BH", "Lock"],
+    SF: ["2BH", "Lock", "Backend"],
+    PF: ["Backend", "Inside", "Outside"],
+    C: ["Inside C", "Outside C"],
+  };
+
+  const heightRanges = {
+    PG: { min: 69, max: 79 }, // 5'9" - 6'7"
+    SG: { min: 72, max: 80 }, // 6'4" - 6'8"
+    SF: { min: 76, max: 82 }, // 6'5" - 6'11"
+    PF: { min: 77, max: 84 }, // 6'6" - 7'0"
+    C: { min: 79, max: 87 }, // 6'7" - 7'3"
+  };
 
   const getWingspanOptions = (heightInches: number) => {
     const options = [];
@@ -173,7 +173,7 @@ const NewBuildScreen = () => {
   const handleAttributeChange = (attribute: string, value: number) => {
     setAttributesState((prev) => ({
       ...prev,
-      [attribute]: value,
+      [attribute]: Number(value),
     }));
   };
 
@@ -308,11 +308,11 @@ const NewBuildScreen = () => {
               );
             })}
           </Picker>
-          <ProgressBar
+          {/* <ProgressBar
             progress={progress}
             color={MD3Colors.error50}
             style={{ height: 40, borderRadius: 5 }} // Increase height and add rounded corners
-          />
+          /> */}
         </View>
       );
     });
@@ -344,16 +344,16 @@ const NewBuildScreen = () => {
             }}
             buttons={[
               {
-                value: "PG",
+                value: "Point Guard",
                 label: "PG",
               },
               {
-                value: "SG",
+                value: "Shooting Guard",
                 label: "SG",
               },
-              { value: "SF", label: "SF" },
-              { value: "PF", label: "PF" },
-              { value: "C", label: "C" },
+              { value: "Small Foward", label: "SF" },
+              { value: "Power Foward", label: "PF" },
+              { value: "Center", label: "C" },
             ]}
           />
           {/* <Picker
@@ -445,19 +445,31 @@ const NewBuildScreen = () => {
         {renderAttributePickers(attributeCategories.finishing, "#2196F3")}
       </View>
 
-      <View style={[styles.card, { backgroundColor: "#4CAF50" }]}>
+      <View
+        style={[{ backgroundColor: "#4CAF50" }]}
+        className="p-8 m-8 rounded"
+      >
         {renderAttributePickers(attributeCategories.shooting, "#4CAF50")}
       </View>
 
-      <View style={[styles.card, { backgroundColor: "#FFC107" }]}>
+      <View
+        style={[{ backgroundColor: "#FFC107" }]}
+        className="p-8 m-8 rounded"
+      >
         {renderAttributePickers(attributeCategories.playmaking, "#FFC107")}
       </View>
 
-      <View style={[styles.card, { backgroundColor: "#F44336" }]}>
+      <View
+        style={[{ backgroundColor: "#F44336" }]}
+        className="p-8 m-8 rounded"
+      >
         {renderAttributePickers(attributeCategories.defense, "#F44336")}
       </View>
 
-      <View style={[styles.card, { backgroundColor: "#FF9800" }]}>
+      <View
+        style={[{ backgroundColor: "#FF9800" }]}
+        className="p-8 m-8 rounded"
+      >
         {renderAttributePickers(attributeCategories.physical, "#FF9800")}
       </View>
 
