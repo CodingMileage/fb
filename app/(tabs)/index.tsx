@@ -199,7 +199,7 @@ export default function TabOneScreen() {
           onPressOut={handlePressOut}
           onPress={handlePress}
         >
-          <View className="p-4 rounded bg-slate-200">
+          <View className="p-4 rounded-3xl bg-slate-200">
             <View className="flex items-center justify-center">
               <PieChart
                 data={pieData}
@@ -228,17 +228,21 @@ export default function TabOneScreen() {
 
             <View className="flex flex-row justify-center">
               <Text className="text-xl font-semibold">
-                HT: {convertHeight(item.height)}
+                HT: {convertHeight(item.height)} |{" "}
               </Text>
-              <Text className="text-xl font-semibold">WT: {item.weight}</Text>
+              <Text className="text-xl font-semibold">
+                WT: {item.weight} |{" "}
+              </Text>
               <Text className="text-xl font-semibold">
                 WS: {convertHeight(item.wingspan)}
               </Text>
             </View>
-            <Text className="text-xl font-semibold">Role: {item.role}</Text>
-            <View style={styles.likeContainer}>
+            <Text className="pt-2 text-xl font-semibold text-center">
+              Role: {item.role}
+            </Text>
+            <View className="flex flex-row items-center justify-center pt-2">
               <Icon name="heart" size={24} color="red" />
-              <Text style={styles.likesText}>{item.likes}</Text>
+              <Text className="font-bold">{item.likes}</Text>
             </View>
           </View>
         </TouchableOpacity>

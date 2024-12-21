@@ -76,17 +76,21 @@ const NewBuildScreen = () => {
   const [gamertag, setGamertag] = useState<string | null>(null);
   const [newBuildHeight, setNewBuildHeight] = useState(69);
   const [newBuildWeight, setNewBuildWeight] = useState(150);
-  const [newBuildPosition, setNewBuildPosition] = useState("");
+  const [newBuildPosition, setNewBuildPosition] = useState<
+    keyof typeof positionsToRoles | ""
+  >("");
   const [newBuildRole, setNewBuildRole] = useState("");
   const [newBuildWingspan, setNewBuildWingspan] = useState(69);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { reloadApp } = useReload();
-  const [attributesState, setAttributesState] = useState(
+  const [attributesState, setAttributesState] = useState<{
+    [key: string]: number;
+  }>(
     Object.keys(attributes).reduce((acc, attr) => {
       acc[attr] = 25;
       return acc;
-    }, {})
+    }, {} as { [key: string]: number })
   );
 
   const positionsToRoles = {
@@ -178,7 +182,10 @@ const NewBuildScreen = () => {
   };
 
   const heightOptions = (position: string) => {
-    const range = heightRanges[position] || { min: 69, max: 79 };
+    const range = heightRanges[position as keyof typeof heightRanges] || {
+      min: 69,
+      max: 79,
+    };
     const options: number[] = [];
     for (let i = range.min; i <= range.max; i++) {
       options.push(i);
@@ -255,14 +262,30 @@ const NewBuildScreen = () => {
     }
   };
 
-  const renderAttributeSliders = (category, color) => {
+  interface AttributeCategory {
+    [key: string]: string;
+  }
+
+  interface AttributeState {
+    [key: string]: number;
+  }
+
+  interface WingspanOption {
+    label: string;
+    value: number;
+  }
+
+  const renderAttributeSliders = (
+    category: [string, string][],
+    color: string
+  ): JSX.Element[] => {
     return category.map(([key, label]) => (
       <View key={key}>
         <Text style={styles.attributeLabel}>{label}</Text>
         <View style={styles.sliderContainer}>
           <Slider
             value={attributesState[key]}
-            onValueChange={(value) => handleAttributeChange(key, value)}
+            onValueChange={(value: number) => handleAttributeChange(key, value)}
             minimumValue={25}
             maximumValue={99}
             step={1}
@@ -273,7 +296,7 @@ const NewBuildScreen = () => {
           <TextInput
             style={styles.attributeInput}
             value={attributesState[key].toString()}
-            onChangeText={(text) => {
+            onChangeText={(text: string) => {
               const value = parseInt(text) || 25;
               handleAttributeChange(key, Math.max(25, Math.min(99, value)));
             }}
@@ -344,16 +367,16 @@ const NewBuildScreen = () => {
             }}
             buttons={[
               {
-                value: "Point Guard",
+                value: "PG",
                 label: "PG",
               },
               {
-                value: "Shooting Guard",
+                value: "SG",
                 label: "SG",
               },
-              { value: "Small Foward", label: "SF" },
-              { value: "Power Foward", label: "PF" },
-              { value: "Center", label: "C" },
+              { value: "SF", label: "SF" },
+              { value: "PF", label: "PF" },
+              { value: "C", label: "C" },
             ]}
           />
           {/* <Picker
@@ -381,7 +404,11 @@ const NewBuildScreen = () => {
             enabled={!!newBuildPosition}
           >
             <Picker.Item label="Select Role" value="" />
-            {(positionsToRoles[newBuildPosition] || []).map((role) => (
+            {(
+              positionsToRoles[
+                newBuildPosition as keyof typeof positionsToRoles
+              ] || []
+            ).map((role) => (
               <Picker.Item key={role} label={role} value={role} />
             ))}
           </Picker>
@@ -392,7 +419,7 @@ const NewBuildScreen = () => {
           <Picker
             selectedValue={newBuildHeight}
             onValueChange={(itemValue) => {
-              const newHeight = parseInt(itemValue);
+              const newHeight = parseInt(itemValue.toString());
               setNewBuildHeight(newHeight);
               // Update wingspan when height changes to maintain valid range
               if (newBuildWingspan < newHeight) {
@@ -419,7 +446,7 @@ const NewBuildScreen = () => {
           <Picker
             selectedValue={newBuildWingspan}
             onValueChange={(itemValue) =>
-              setNewBuildWingspan(parseInt(itemValue))
+              setNewBuildWingspan(parseInt(itemValue.toString()))
             }
           >
             {getWingspanOptions(newBuildHeight).map(({ label, value }) => (
@@ -428,13 +455,34 @@ const NewBuildScreen = () => {
           </Picker>
         </View>
 
-        <TextInput
+        {/* <TextInput
           style={styles.input}
           placeholder="Build Weight"
           value={newBuildWeight.toString()}
           onChangeText={(text) => setNewBuildWeight(parseInt(text) || 150)}
           keyboardType="numeric"
-        />
+        /> */}
+        <View>
+          <Text>Build Weight</Text>
+          <Picker
+            selectedValue={newBuildWeight}
+            onValueChange={(itemValue) =>
+              setNewBuildWeight(parseInt(itemValue))
+            }
+            style={styles.picker}
+          >
+            {[...Array(151).keys()].map((i) => {
+              const value = i + 150;
+              return (
+                <Picker.Item
+                  key={value}
+                  label={value.toString()}
+                  value={value}
+                />
+              );
+            })}
+          </Picker>
+        </View>
       </View>
 
       {/* Attribute Categories */}

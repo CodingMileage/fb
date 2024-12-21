@@ -237,8 +237,9 @@ const LFG = () => {
             fontSize: 24,
             fontWeight: "bold",
             textAlign: "center",
-            color: "black",
+            color: "white",
           }}
+          className="mt-4"
         >
           People Looking: {postCount}
         </Text>
@@ -294,7 +295,7 @@ const LFG = () => {
             </>
           ) : (
             <View>
-              <TextN className="text-3xl font-bold text-center">
+              <TextN className="text-3xl font-bold text-center text-white">
                 Your Post
               </TextN>
               <View
@@ -357,7 +358,7 @@ const LFG = () => {
             }
 
             return (
-              <View key={post.id} className="p-4 m-4 rounded">
+              <View key={post.id} className="items-center w-full pb-6">
                 <Link
                   key={post.id}
                   href={`/post/${post.id}`}
@@ -377,10 +378,9 @@ const LFG = () => {
                       </Text>
                       <Text>{timeString}</Text>
                     </Card.Content>
-                    {/* <Card.Actions>
-                      <Button>Cancel</Button>
-                      <Button>Ok</Button>
-                    </Card.Actions> */}
+                    <Card.Actions>
+                      <Button>Interested</Button>
+                    </Card.Actions>
                   </Card>
                 </Link>
               </View>

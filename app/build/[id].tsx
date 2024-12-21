@@ -19,7 +19,14 @@ import {
   updateDoc,
   arrayRemove,
 } from "firebase/firestore";
-import { PieChart } from "react-native-chart-kit";
+import {
+  LineChart,
+  BarChart,
+  PieChart,
+  ProgressChart,
+  ContributionGraph,
+  StackedBarChart,
+} from "react-native-chart-kit";
 
 // Helper function to convert height
 const convertHeight = (height: number) => {
@@ -181,6 +188,18 @@ const BuildDetails = () => {
     },
   ];
 
+  const data = {
+    labels: ["January", "February", "March", "April", "May", "June"],
+    datasets: [
+      {
+        data: [20, 45, 28, 80, 99, 43],
+        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
+        strokeWidth: 2, // optional
+      },
+    ],
+    // legend: ["Rainy Days"], // optional
+  };
+
   const AttributeCard = ({
     title,
     data,
@@ -304,6 +323,21 @@ const BuildDetails = () => {
               accessor="population"
               backgroundColor="transparent"
               paddingLeft="15"
+            />
+          </View>
+
+          <View className="pb-10">
+            <LineChart
+              data={data}
+              width={Dimensions.get("window").width - 32}
+              height={220}
+              bezier
+              chartConfig={{
+                backgroundColor: "#1e1e1e",
+                backgroundGradientFrom: "#1e1e1e",
+                backgroundGradientTo: "#1e1e1e",
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              }}
             />
           </View>
 
